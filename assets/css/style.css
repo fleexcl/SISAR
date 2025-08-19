@@ -1,0 +1,49 @@
+:root{
+  --sidebar-bg: #0f172a;      /* azul noche */
+  --sidebar-link: #cbd5e1;    /* gris claro */
+  --sidebar-link-active: #ffffff;
+  --content-bg: #f8fafc;      /* fondo claro */
+  --card-bg: #ffffff;
+  --primary: #2563eb;         /* azul vivo */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --info: #0891b2;
+}
+
+body { background: var(--content-bg); }
+
+.sidebar {
+  width: 240px; min-height: 100vh;
+  background: var(--sidebar-bg); color: var(--sidebar-link);
+  position: fixed; left: 0; top: 0; bottom: 0;
+  padding: 18px 14px;
+}
+.sidebar .brand { color: #fff; font-weight: 700; text-decoration: none; }
+.sidebar .nav-link { color: var(--sidebar-link); border-radius: 10px; }
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active { color: var(--sidebar-link-active); background: rgba(255,255,255,0.08); }
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: #fff; border-bottom: 1px solid #e5e7eb;
+}
+
+.content { margin-left: 240px; padding: 20px; }
+
+.kpi .icon {
+  width: 44px; height: 44px; display:flex; align-items:center; justify-content:center;
+  border-radius: 50%; font-size: 18px;
+}
+.kpi .value { font-size: 1.4rem; font-weight: 700; }
+.kpi .label { font-size: .85rem; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+
+.login-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0e7ff, #f8fafc);
+}
+
+.card-soft {
+  border: 0; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.06);
+}
+
+.badge-pill { border-radius: 999px; padding: .35rem .6rem; font-weight: 600; }
