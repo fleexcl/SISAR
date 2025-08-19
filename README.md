@@ -2,7 +2,7 @@
 SISTEMA DE INFORMACION DE SALUD PARA AREAS RURALES
 
 Sistema de Login
-https://cdn.discordapp.com/attachments/1064869505748172870/1407203039797973044/login.png?ex=68a53f75&is=68a3edf5&hm=6367008cc164a00387cd8040cdd7a0eb2e93bf7ccc7c28e7ac95670bd4c25915&
+https://imgur.com/JIZxWXI
 
 Panel Principal de Dashboard
 https://cdn.discordapp.com/attachments/1064869505748172870/1407203039558893619/dashboard.png?ex=68a53f75&is=68a3edf5&hm=95507255b06d76d5e0a0543aad27c22372c376f7c14837c7e49fc43249c01c37&
