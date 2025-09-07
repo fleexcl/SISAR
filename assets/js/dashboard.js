@@ -1,9 +1,25 @@
 // assets/js/dashboard.js
 function setKPIs() {
-  document.getElementById('kpiRutas').textContent = 12;
-  document.getElementById('kpiAtenciones').textContent = 12;
-  document.getElementById('kpiPacientes').textContent = 5;
-  document.getElementById('kpiAlertas').textContent = 3;
+  // Fuentes reales desde storage.js y localStorage
+  const pacientes  = getPacientes();    // []
+  const atenciones = getAtenciones();   // []
+  const rutas      = JSON.parse(localStorage.getItem('sisar_rutas') || '[]');
+
+  // Cálculos (alineados con reportes.js)
+  const rutasTerminadas = rutas.filter(r => r.estado === 'terminada').length;
+  const pendientesSync  = atenciones.filter(a => a.estado === 'pendiente').length;
+
+  // Pintar KPIs
+  document.getElementById('kpiRutas').textContent      = rutasTerminadas;     // Rutas recorridas
+  
+  //document.getElementById('kpiAtenciones').textContent = atenciones.length;   // Atenciones realizadas (totales) se registran de inmediato
+  
+  // NEW: solo sincronizadas
+  const atSync = atenciones.filter(a => a.estado === 'sincronizada').length; // Atenciones realizadas ahora quedan en Pendiente de Sync
+  document.getElementById('kpiAtenciones').textContent = atSync;
+
+  document.getElementById('kpiPacientes').textContent  = pacientes.length;    // Pacientes activos
+  document.getElementById('kpiAlertas').textContent    = pendientesSync;      // “Alertas” = pend. de Sync
 }
 
 function renderCharts() {
