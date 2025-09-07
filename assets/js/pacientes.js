@@ -38,6 +38,27 @@ function registrarAtencion(pacienteId){
   const fechaISO = new Date().toISOString();
   addAtencion({ pacienteId, fechaISO, notas:'Controles básicos registrados (demo)' });
   alert('Atención registrada en modo offline (pendiente de sincronización).');
+  if (typeof updatePendBadge === 'function') updatePendBadge();
+}
+
+// Validar RUT
+function validarRUT(rut) {
+  // Limpia formato
+  rut = rut.replace(/\./g,'').replace(/-/g,'').toUpperCase();
+  if(!/^[0-9]+[0-9K]$/.test(rut)) return false;
+
+  const cuerpo = rut.slice(0, -1);
+  const dv = rut.slice(-1);
+
+  let suma = 0, mul = 2;
+  for(let i = cuerpo.length - 1; i >= 0; i--) {
+    suma += parseInt(cuerpo[i]) * mul;
+    mul = mul === 7 ? 2 : mul + 1;
+  }
+  const res = 11 - (suma % 11);
+  const dvEsperado = res === 11 ? '0' : res === 10 ? 'K' : res.toString();
+
+  return dv === dvEsperado;
 }
 
 // Modal: alta rápida
@@ -53,9 +74,20 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const rut    = document.getElementById('pRut').value.trim();
     const comuna = document.getElementById('pComuna').value.trim();
     const riesgo = document.getElementById('pRiesgo').value;
-    if(!nombre || !rut || !comuna){ alert('Completa los campos.'); return; }
-    addPaciente({ nombre, rut, comuna, riesgo });
-    modal.hide();
-    renderPacientes();
+    
+    // Validar RUT
+    if(!nombre || !rut || !comuna){ 
+      showToast('Completa todos los campos obligatorios.', 'warning');
+      return; 
+            }
+    if(!validarRUT(rut)){
+      showToast('El RUT ingresado no es válido. Formato esperado: 12.345.678-9', 'danger');
+        return;
+            }
+
+      addPaciente({ nombre, rut, comuna, riesgo });
+      modal.hide();
+      showToast('Paciente guardado correctamente.', 'success');
+      renderPacientes();
   });
 });
