@@ -9,6 +9,15 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="assets/css/style.css" rel="stylesheet">
 </head>
+<!-- Toast container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
+  <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="3000">
+    <div class="d-flex">
+      <div id="appToastBody" class="toast-body">Listo.</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
+  </div>
+</div>
 <body>
   <!-- Sidebar -->
   <nav class="sidebar">
@@ -26,7 +35,7 @@
 
       <!-- Rutas: admin, coordinador -->
       <li>
-        <a href="#" class="nav-link"
+        <a href="rutas.html" class="nav-link"
            data-roles="admin,coordinador">
           <i class="fa-solid fa-route me-2"></i>Rutas
         </a>
@@ -42,7 +51,7 @@
 
       <!-- Agenda: todos los roles -->
       <li>
-        <a href="#" class="nav-link"
+        <a href="agenda.html" class="nav-link"
            data-roles="admin,coordinador,clinico,conductor,analista">
           <i class="fa-solid fa-calendar-check me-2"></i>Agenda
         </a>
@@ -50,7 +59,7 @@
 
       <!-- Reportes: admin, coordinador, analista -->
       <li>
-        <a href="#" class="nav-link"
+        <a href="reportes.html" class="nav-link"
            data-roles="admin,coordinador,analista">
           <i class="fa-solid fa-chart-column me-2"></i>Reportes
         </a>
@@ -58,7 +67,7 @@
 
       <!-- Configuración: solo admin -->
       <li>
-        <a href="#" class="nav-link"
+        <a href="config.html" class="nav-link"
            data-roles="admin">
           <i class="fa-solid fa-gear me-2"></i>Configuración
         </a>
@@ -76,6 +85,7 @@
         <span id="userInfo" class="text-muted small">—</span>
         <button class="btn btn-sm btn-outline-secondary" id="btnSync">
           <i class="fa-solid fa-arrows-rotate me-1"></i>Sync
+          <span class="badge ms-1" id="badgePend">0</span>
         </button>
         <button class="btn btn-sm btn-primary" id="btnLogout">
           <i class="fa-solid fa-right-from-bracket me-1"></i>Salir
@@ -103,7 +113,7 @@
               <div class="icon bg-success-subtle text-success"><i class="fa-solid fa-stethoscope"></i></div>
               <div class="ms-3">
                 <div class="value" id="kpiAtenciones">0</div>
-                <div class="label">Atenciones realizadas</div>
+                <div class="label">Atenciones sincronizadas</div>
               </div>
             </div>
           </div>
@@ -125,7 +135,7 @@
               <div class="icon bg-warning-subtle text-warning"><i class="fa-solid fa-bell"></i></div>
               <div class="ms-3">
                 <div class="value" id="kpiAlertas">0</div>
-                <div class="label">Reportes / Notificaciones</div>
+                <div class="label">Pendientes de Sync</div>
               </div>
             </div>
           </div>
@@ -179,11 +189,42 @@
     // Mostrar usuario y rol en topbar
     document.getElementById('userInfo').textContent = `${me.nombre} — ${me.role}`;
 
+    //Llama funcion para Badge Sync
+    updatePendBadge();
+
+    //Funcion para boton Badge Sync
+    function countPendientes() {
+        try { return getAtenciones().filter(a => a.estado === 'pendiente').length; }
+        catch { return 0; }
+      }
+    function updatePendBadge() {
+        const el = document.getElementById('badgePend');
+          if (!el) return;
+        const n = countPendientes();
+          el.textContent = n;
+    // Estado visual: amarillo si hay pendientes, verde si todo OK
+      el.className = 'badge ms-1 ' + (n > 0 ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success');
+      el.title = n > 0 ? 'Atenciones pendientes de sincronizar' : 'Sin pendientes';
+      }
+
     // Eventos de topbar
     document.getElementById('btnLogout').addEventListener('click', logout);
-    //document.getElementById('btnSync').addEventListener('click', () => alert('Sincronización simulada OK'));
-    document.getElementById('btnSync').addEventListener('click', ()=>{const n = syncPendientes();alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
-  });
+
+    //reutilizable en todas las páginas Badge para Sync con variable()
+      updatePendBadge(); // al cargar
+      wireSyncButton({
+      onAfterSync: (n)=>{ if (typeof setKPIs==='function') setKPIs(); }
+      });
+
+    /*document.getElementById('btnSync').addEventListener('click', ()=>{
+    const n = syncPendientes();
+    updatePendBadge(); 
+    setKPIs(); // ← refresca los KPIs inmediatamente
+    updatePendBadge();            // ← refresca badge
+    if (typeof setKPIs === 'function') setKPIs(); // ← en dashboard, actualiza KPIs
+    alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
+    });*/
+
 
     // ===== Filtrado de menú por rol =====
     // Cada link del sidebar puede declarar data-roles="admin,coordinador,..."
