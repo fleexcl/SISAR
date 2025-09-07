@@ -29,3 +29,38 @@ function logout(){
   localStorage.removeItem(SISAR_AUTH_KEY);
   location.href = 'login.html';
 }
+
+//reutilizable en todas las páginas Badge para Sync con variable()
+function wireSyncButton(options = {}) {
+  const btn = document.getElementById('btnSync');
+  if (!btn) return;
+  btn.addEventListener('click', ()=>{
+    const n = syncPendientes();
+    if (typeof updatePendBadge === 'function') updatePendBadge();
+    if (typeof options.onAfterSync === 'function') options.onAfterSync(n);
+    //alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
+    showToast(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.', n ? 'success' : 'info');
+  });
+}
+
+// Helper de notificación visual (Bootstrap Toast)
+function showToast(message, type='info') {
+  const toastEl = document.getElementById('appToast');
+  const bodyEl  = document.getElementById('appToastBody');
+  if (!toastEl || !bodyEl) { console.warn('Toast container no encontrado'); return; }
+
+  // Reset estilos y aplicar según tipo
+  toastEl.className = 'toast align-items-center border-0';
+  bodyEl.className  = 'toast-body';
+  const stylesByType = {
+    success: 'text-bg-success',
+    danger:  'text-bg-danger',
+    warning: 'text-bg-warning',
+    info:    'text-bg-primary'
+  };
+  toastEl.classList.add(stylesByType[type] || stylesByType.info);
+  bodyEl.textContent = message;
+
+  const t = bootstrap.Toast.getOrCreateInstance(toastEl);
+  t.show();
+}
