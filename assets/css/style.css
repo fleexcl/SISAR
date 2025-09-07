@@ -47,3 +47,5 @@ body { background: var(--content-bg); }
 }
 
 .badge-pill { border-radius: 999px; padding: .35rem .6rem; font-weight: 600; }
+
+.toast { opacity: 0.98; }
