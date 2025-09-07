@@ -8,6 +8,15 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="assets/css/style.css" rel="stylesheet">
 </head>
+<!-- Toast container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
+  <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="3000">
+    <div class="d-flex">
+      <div id="appToastBody" class="toast-body">Listo.</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
+  </div>
+</div>
 <body>
   <!-- Sidebar (mismo que en dashboard, con roles) -->
   <nav class="sidebar">
@@ -32,7 +41,10 @@
     <div class="topbar py-2 px-3 d-flex align-items-center">
       <div class="ms-auto d-flex align-items-center gap-2">
         <span id="userInfo" class="text-muted small">—</span>
-        <button class="btn btn-sm btn-outline-secondary" id="btnSync"><i class="fa-solid fa-arrows-rotate me-1"></i>Sync</button>
+        <button class="btn btn-sm btn-outline-secondary" id="btnSync">
+          <i class="fa-solid fa-arrows-rotate me-1"></i>Sync
+          <span class="badge ms-1" id="badgePend">0</span>
+        </button>
         <button class="btn btn-sm btn-primary" id="btnLogout"><i class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
       </div>
     </div>
@@ -101,11 +113,41 @@
     const me = currentUser();
     if(!me){ location.href = 'login.html'; }
     document.getElementById('userInfo').textContent = `${me.nombre} — ${me.role}`;
+
+    //Llama funcion para Badge Sync
+    updatePendBadge();
+
+    //Funcion para boton Badge Sync
+    function countPendientes() {
+        try { return getAtenciones().filter(a => a.estado === 'pendiente').length; }
+        catch { return 0; }
+      }
+    function updatePendBadge() {
+        const el = document.getElementById('badgePend');
+          if (!el) return;
+        const n = countPendientes();
+          el.textContent = n;
+    // Estado visual: amarillo si hay pendientes, verde si todo OK
+      el.className = 'badge ms-1 ' + (n > 0 ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success');
+      el.title = n > 0 ? 'Atenciones pendientes de sincronizar' : 'Sin pendientes';
+      }
+
+      //reutilizable en todas las páginas Badge para Sync con variable()
+      updatePendBadge(); // al cargar
+      wireSyncButton({
+      onAfterSync: (n)=>{ if (typeof setKPIs==='function') setKPIs(); }
+      });
+
+    // Eventos de topbar
     document.getElementById('btnLogout').addEventListener('click', logout);
-    document.getElementById('btnSync').addEventListener('click', ()=>{
-      const n = syncPendientes();
-      alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
-    });
+    /*document.getElementById('btnSync').addEventListener('click', ()=>{
+    const n = syncPendientes();
+    updatePendBadge(); 
+    setKPIs(); // ← refresca los KPIs inmediatamente
+    updatePendBadge();            // ← refresca badge
+    if (typeof setKPIs === 'function') setKPIs(); // ← en dashboard, actualiza KPIs
+    alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
+    });*/
 
     // Filtrar menú por rol
     document.querySelectorAll('.sidebar a.nav-link[data-roles]').forEach(link=>{
