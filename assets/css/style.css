@@ -49,3 +49,44 @@ body { background: var(--content-bg); }
 .badge-pill { border-radius: 999px; padding: .35rem .6rem; font-weight: 600; }
 
 .toast { opacity: 0.98; }
+
+/* === SISAR Geo (MVP) === */
+.map-hint {
+  font-size: .85rem;
+  color: #6b7280;
+}
+
+.route-legend .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+.dot-alto { background:#dc2626; }   /* rojo  */
+.dot-medio{ background:#f59e0b; }   /* ámbar */
+.dot-bajo { background:#16a34a; }   /* verde */
+.dot-yo   { background:#2563eb; }   /* azul  */
+
+/* === Fix Leaflet en modales / contenedores === */
+.leaflet-container { width: 100%; height: 100%; }
+
+/* === SISAR Ruta (MVP) === */
+/* Alturas de contenedores (ajusta si quieres) */
+#mapPicker { height: 280px; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; }
+#mapRuta   { height: 320px; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; }
+.route-legend {
+  font-size: .85rem;
+  color: #6b7280;
+}
+
+/* === SISAR: Autocompletar de direcciones === */
+.autocomplete { position: relative; }
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  z-index: 1051; /* sobre el contenido del modal */
+  max-height: 220px; overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+.autocomplete-item { padding: 8px 12px; cursor: pointer; }
+.autocomplete-item:hover, .autocomplete-item.active { background: #f3f4f6; }
