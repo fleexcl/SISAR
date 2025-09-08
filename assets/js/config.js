@@ -21,7 +21,8 @@ function seedDemo(){
     agenda.push({ id:(Date.now()+1).toString(), fechaISO:new Date().toISOString().slice(0,16), pacienteId:getPacientes()[0].id, responsable:'Clínico Demo', estado:'pendiente' });
     localStorage.setItem('sisar_agenda', JSON.stringify(agenda));
   }
-  alert('Datos de demostración cargados.');
+  //alert('Datos de demostración cargados.');
+  _toast('Datos de demostración cargados','success');
 }
 function clearAll(){
   if(!confirm('¿Borrar todos los datos locales?')) return;
