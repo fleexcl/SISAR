@@ -20,6 +20,23 @@ function addPaciente(p){
   return id;
 }
 
+function updatePaciente(id, updates){
+  const list = getPacientes();
+  const i = list.findIndex(x => x.id === id);
+  if (i < 0) return false;
+  list[i] = { ...list[i], ...updates };
+  _write(DB_KEYS.PACIENTES, list);
+  return true;
+}
+
+function setPacienteGeo(id, lat, lng, precision='aprox'){
+  return updatePaciente(id, {
+    lat, lng,
+    precision: precision || 'aprox',
+    updatedAt: new Date().toISOString()
+  });
+}
+
 // === Atenciones ===
 function getAtenciones(){ return _read(DB_KEYS.ATENCIONES); }
 function addAtencion(a){
