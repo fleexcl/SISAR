@@ -8,16 +8,17 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="assets/css/style.css" rel="stylesheet">
 </head>
-<!-- Toast container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
-  <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="3000">
-    <div class="d-flex">
-      <div id="appToastBody" class="toast-body">Listo.</div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+<body>
+  <!-- Toast container (mover aquí dentro del body) -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
+    <div id="appToast" class="toast align-items-center border-0" role="status" aria-live="polite" aria-atomic="true" data-bs-delay="3000">
+      <div class="d-flex">
+        <div id="appToastBody" class="toast-body">Listo.</div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
     </div>
   </div>
-</div>
-<body>
+  <!-- ...resto del body... -->
   <nav class="sidebar">
     <a class="brand d-flex align-items-center mb-3 text-decoration-none" href="#"><i class="fa-solid fa-location-dot me-2"></i> SISAR</a>
     <ul class="nav nav-pills flex-column mb-auto">
@@ -71,6 +72,25 @@
             </div>
           </div>
         </div>
+        <!--Modal Importar Datos-->
+        <div class="col-md-6">
+            <div class="card card-soft h-100">
+                <div class="card-body">
+                    <h6>Importar pacientes</h6>
+              <p class="text-muted small">Cargue una planilla Excel/CSV con columnas: <strong>Nombre, RUT, Comuna, Riesgo</strong>.</p>
+            <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" id="chkActualizarExistentes" checked>
+                <label class="form-check-label" for="chkActualizarExistentes">Actualizar si existe RUT</label>
+           </div>
+        <div class="d-flex gap-2">
+            <input type="file" id="fileImportCfg" accept=".xlsx,.xls,.csv" class="form-control form-control-sm" style="max-width: 260px;">
+              <button class="btn btn-sm btn-primary" id="btnPreviewCfg"><i class="fa-solid fa-eye me-1"></i>Previsualizar</button>
+              <button class="btn btn-sm btn-outline-secondary" id="btnPlantillaCfg"><i class="fa-solid fa-download me-1"></i>Plantilla CSV</button>
+           </div>
+                </div>
+          </div>
+      </div>
+
       </div>
     </main>
   </div>
@@ -79,46 +99,128 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/storage.js"></script>
   <script src="assets/js/config.js"></script>
-  <script>
-    const me = currentUser(); if(!me) location.href='login.html';
-    document.getElementById('userInfo').textContent = `${me.nombre} — ${me.role}`;
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="assets/js/importer.js"></script>
+  
+<script>
+  const me = currentUser(); 
+  if(!me) location.href='login.html';
+  document.getElementById('userInfo').textContent = `${me.nombre} — ${me.role}`;
 
-    //Llama funcion para Badge Sync
-    updatePendBadge();
+  // --- Badge de Sync ---
+  function countPendientes() {
+    try { return getAtenciones().filter(a => a.estado === 'pendiente').length; }
+    catch { return 0; }
+  }
+  function updatePendBadge() {
+    const el = document.getElementById('badgePend');
+    if (!el) return;
+    const n = countPendientes();
+    el.textContent = n;
+    el.className = 'badge ms-1 ' + (n > 0 ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success');
+    el.title = n > 0 ? 'Atenciones pendientes de sincronizar' : 'Sin pendientes';
+  }
+  updatePendBadge();
 
-    //Funcion para boton Badge Sync
-    function countPendientes() {
-        try { return getAtenciones().filter(a => a.estado === 'pendiente').length; }
-        catch { return 0; }
+  // Si definiste wireSyncButton en auth.js, úsalo:
+  if (typeof wireSyncButton === 'function') {
+    wireSyncButton({
+      onAfterSync: (n)=>{ 
+        // En config no hay KPIs, pero si los agregas, llama aquí.
+        updatePendBadge(); 
       }
-    function updatePendBadge() {
-        const el = document.getElementById('badgePend');
-          if (!el) return;
-        const n = countPendientes();
-          el.textContent = n;
-    // Estado visual: amarillo si hay pendientes, verde si todo OK
-      el.className = 'badge ms-1 ' + (n > 0 ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success');
-      el.title = n > 0 ? 'Atenciones pendientes de sincronizar' : 'Sin pendientes';
-      }
+    });
+  } else {
+    // Fallback si no tienes wireSyncButton
+    document.getElementById('btnSync').addEventListener('click', ()=>{
+      const n = syncPendientes();
+      updatePendBadge();
+      showToast(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.', n ? 'success' : 'info');
+    });
+  }
 
-      //reutilizable en todas las páginas Badge para Sync con variable()
-      updatePendBadge(); // al cargar
-      wireSyncButton({
-      onAfterSync: (n)=>{ if (typeof setKPIs==='function') setKPIs(); }
-      });
+  // Logout
+  document.getElementById('btnLogout').addEventListener('click', logout);
 
-    // Eventos de topbar
-    ocument.getElementById('btnLogout').addEventListener('click', logout);
-    /*document.getElementById('btnSync').addEventListener('click', ()=>{
-    const n = syncPendientes();
-    updatePendBadge(); 
-    setKPIs(); // ← refresca los KPIs inmediatamente
-    updatePendBadge();            // ← refresca badge
-    if (typeof setKPIs === 'function') setKPIs(); // ← en dashboard, actualiza KPIs
-    alert(n ? `Sincronizadas ${n} atenciones pendientes.` : 'No hay atenciones pendientes.');
-    });*/
-      
-    document.querySelectorAll('.sidebar a.nav-link[data-roles]').forEach(a=>{const ok=a.dataset.roles.split(',').includes(me.role); if(!ok) a.style.display='none';});
-  </script>
+  // Ocultar items de menú según rol
+  document.querySelectorAll('.sidebar a.nav-link[data-roles]').forEach(a=>{
+    const ok = a.dataset.roles.split(',').includes(me.role); 
+    if(!ok) a.style.display='none';
+  });
+
+  // --- Permisos en la tarjeta de importación (Config) ---
+  // Solo admin y coordinador pueden importar
+  if (!['admin','coordinador'].includes(me.role)) {
+    const fileCfg   = document.getElementById('fileImportCfg');
+    const btnPrevCfg= document.getElementById('btnPreviewCfg');
+    const btnTplCfg = document.getElementById('btnPlantillaCfg');
+    const chkUpd    = document.getElementById('chkActualizarExistentes');
+    if (fileCfg) fileCfg.disabled = true;
+    if (btnPrevCfg) btnPrevCfg.disabled = true;
+    if (btnTplCfg) btnTplCfg.disabled = true;
+    if (chkUpd) chkUpd.disabled = true;
+  }
+
+  // importer.js ya conecta: 
+  // - #btnPreviewCfg con parseAndPreviewFile()
+  // - #btnPlantillaCfg con downloadTemplateCSV()
+  // - #chkActualizarExistentes para __impUpdateExisting
+</script>
+
+
+<!-- Modal Importación -->
+<div class="modal fade" id="modalImport" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Importar pacientes (Excel/CSV)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Archivo</label>
+            <input type="file" id="fileImport" accept=".xlsx,.xls,.csv" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <div class="form-check form-switch mt-4">
+              <input class="form-check-input" type="checkbox" id="chkActualizar" checked>
+              <label class="form-check-label" for="chkActualizar">Actualizar si existe RUT</label>
+            </div>
+          </div>
+          <div class="col-md-5 d-flex gap-2">
+            <button class="btn btn-outline-secondary mt-4" id="btnPlantilla"><i class="fa-solid fa-download me-1"></i>Plantilla CSV</button>
+            <button class="btn btn-primary mt-4" id="btnPreview"><i class="fa-solid fa-eye me-1"></i>Previsualizar</button>
+            <button class="btn btn-success mt-4" id="btnCommit" disabled><i class="fa-solid fa-file-import me-1"></i>Importar válidas</button>
+          </div>
+        </div>
+
+        <hr>
+        <div class="d-flex flex-wrap gap-3 small text-muted">
+          <div>Leídas: <strong id="impRead">0</strong></div>
+          <div>Válidas: <strong id="impValid">0</strong></div>
+          <div>Actualizables: <strong id="impUpdatable">0</strong></div>
+          <div>Duplicadas: <strong id="impDup">0</strong></div>
+          <div>Con error: <strong id="impErr">0</strong></div>
+        </div>
+        <div class="mt-2 table-responsive" style="max-height:40vh;overflow:auto;">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>#</th><th>Nombre</th><th>RUT</th><th>Comuna</th><th>Riesgo</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="impPreviewBody"></tbody>
+          </table>
+        </div>
+        <div class="form-text">Encabezados requeridos (exactos): <code>Nombre, RUT, Comuna, Riesgo</code>.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
